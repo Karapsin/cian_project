@@ -132,8 +132,8 @@ def parse_offer_page(scraper, url):
                        ]
 
     scraper = cloudscraper.create_scraper()
-    for i, photo_url in enumerate(photos_urls_list):
-        with open(path + f"photos\\photo{i}.jpg", "wb") as file:
+    for photo_url in photos_urls_list:
+        with open(path + f"photos\\{photo_url}.jpg", "wb") as file:
             current_image = scraper.get(photo_url)
             file.write(current_image.content)
 
