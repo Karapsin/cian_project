@@ -91,9 +91,16 @@ def parse_offer_json(html,
 
 def load_offer_json(scraper,
                     url,
-                    start_json_template,
+                    page_type,
                     save_to = None
     ):
+
+    if page_type == 'offer_page':
+        start_json_template = OFFER_JSON_TEMPLATE
+    elif page_type == 'search_page':
+        start_json_template = SEARCH_PAGE_JSON_TEMPLATE
+    else:
+        raise ValueError("Unknown page")
 
     html = load_html(scraper, url, save_to)
     offer_json = parse_offer_json(html, 

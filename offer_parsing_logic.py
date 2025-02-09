@@ -3,7 +3,6 @@ from utils import (
     load_offer_json,
     add_json_values
 )
-from constants import OFFER_JSON_TEMPLATE
 
 def parse_offer_page(scraper, url):
 
@@ -13,7 +12,7 @@ def parse_offer_page(scraper, url):
 
     ########################################################################################################
     # get json which will be parsed further
-    offer_json = load_offer_json(scraper, url, OFFER_JSON_TEMPLATE, path)
+    offer_json = load_offer_json(scraper, url, 'offer_page', path)
     single_ad_df = pd.DataFrame()
     single_ad_df['url'] = url
 
