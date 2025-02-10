@@ -1,3 +1,4 @@
+from json_keys_lists import keys_meta_list
 from utils import (
     get_url_based_name,
     load_offer_json,
@@ -29,7 +30,7 @@ def parse_offer_page(scraper, url):
     # for every such internal json we have a lot of keys to check,
     # to improve readability all of them are combined in the keys_meta_list obejcts
     
-    from json_keys_lists import keys_meta_list
+    #from json_keys_lists import keys_meta_list
     json_list = [ad_data['newbuilding'], 
                  ad_data['building'], 
                  offer_json['offerData']['bti']['houseData'], 
@@ -65,13 +66,8 @@ def parse_offer_page(scraper, url):
 
     single_ad_df['parsed_address'] = [parsed_address]
 
-    # if accountType key is in among keys for offer_json['offerData']['agent'],
-    # then it is either real estate agent or realtor,
-    # otherwise that is a property owner
-    single_ad_df['author_type'] = (offer_json['offerData']['agent']['accountType'] 
-                                    if 'accountType' in offer_json['offerData']['agent'].keys()
-                                    else 'owner'
-                                )
+    # json is stored, we will analyze all of them once the data collection is finished
+    single_ad_df['author_info'] = str(offer_json['offerData']['agent'])
 
     # some inner jsons have the same structure, and hence
     # the parsing procedure is always the same

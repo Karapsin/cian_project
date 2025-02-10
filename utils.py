@@ -3,6 +3,8 @@ import json as js
 import os 
 import pandas as pd
 import datetime
+import random
+import time
 from constants import SEARCH_PAGE_JSON_TEMPLATE, OFFER_JSON_TEMPLATE
 
 def get_current_date(output='text'):
@@ -13,11 +15,19 @@ def get_current_datetime(output='text'):
     now = datetime.datetime.now()
     return now.strftime('%Y-%m-%d %H:%M') if output == 'text' else now
 
+def time_print(string):
+    return print((get_current_datetime()+' '+string))
 
 def save_as_txt(object, file_name):
     with open(f'{file_name}.txt', 'w', encoding='utf-8') as file:
         file.write(object)
 
+def random_sleep(mean, var):
+    sleep_duration = random.normalvariate(mean, var)
+    sleep_duration = max(0, sleep_duration)
+
+    time_print(f"sleeping for {sleep_duration:.2f} seconds")
+    time.sleep(sleep_duration)
 
 def get_url_based_name(url, postfix):
     result = (url
@@ -113,7 +123,8 @@ def load_offer_json(scraper,
 
 def add_json_values(df, 
                     json, 
-                    keys_list
+                    keys_list,
+                    col_names_map = None
     ):
 
     for single_key in keys_list:
@@ -125,6 +136,11 @@ def add_json_values(df,
         if isinstance(value, dict) or isinstance(value, list) or isinstance(value, tuple):
             value = str(value)
 
-        df[single_key] = [value]
+        if col_names_map is None:
+            col_name = single_key
+        else:
+            col_name = col_names_map[single_key] if single_key in col_names_map.keys() else single_key
+
+        df[col_name] = [value]
 
     return df 

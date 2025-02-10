@@ -20,7 +20,7 @@ for url in urls_list:
     print(f"starting {url}")
     new_df = parse_offer_page(scraper, url)
     new_df['url'] = url
-    new_df['load_date'] = get_current_datetime()
+    new_df['offer_page_load_dttm'] = get_current_datetime()
 
     total_df = pd.concat([total_df, new_df], ignore_index = True)
     print(total_df)
