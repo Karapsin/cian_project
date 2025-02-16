@@ -6,6 +6,8 @@ import datetime
 import random
 import time
 from constants import SEARCH_PAGE_JSON_TEMPLATE, OFFER_JSON_TEMPLATE
+import shutil
+from fp.fp import FreeProxy
 
 def get_current_date(output='text'):
     return str(datetime.datetime.now())[0:10] if output=='text' else datetime.datetime.now()
@@ -21,6 +23,13 @@ def time_print(string):
 def save_as_txt(object, file_name):
     with open(f'{file_name}.txt', 'w', encoding='utf-8') as file:
         file.write(object)
+
+def forced_mkdir(path):
+    try:
+        os.mkdir(path)
+    except FileExistsError:
+        shutil.rmtree(path) 
+        os.mkdir(path)
 
 def random_sleep(mean, var):
     sleep_duration = random.normalvariate(mean, var)
@@ -69,6 +78,7 @@ def parse_offer_json(html,
 
     # we get such error if and only if we have been blocked
     if start_json_template not in html:
+        print(html)
         raise ValueError("Json not found!!!")
 
     start = html.index(start_json_template) + len(start_json_template)

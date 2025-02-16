@@ -1,15 +1,24 @@
 from json_keys_lists import keys_meta_list
+import re
+import pandas as pd
 from utils import (
+    forced_mkdir,
+    random_sleep,
     get_url_based_name,
     load_offer_json,
     add_json_values
 )
 
-def parse_offer_page(scraper, url):
+def parse_offer_page(scraper, 
+                     url, 
+                     search_photos_url,
+                     mean_sleep = 30,
+                     var_sleep = 5
+    ):
 
     # creating a directory in which info about current url will be saved
     path = f"data_load\\old_flats_sale\\{get_url_based_name(url, 'data')}" 
-    os.mkdir(path)
+    forced_mkdir(path)
 
     ########################################################################################################
     # get json which will be parsed further
@@ -33,7 +42,7 @@ def parse_offer_page(scraper, url):
     #from json_keys_lists import keys_meta_list
     json_list = [ad_data['newbuilding'], 
                  ad_data['building'], 
-                 offer_json['offerData']['bti']['houseData'], 
+                 offer_json['offerData'].get("bti", {}).get("houseData", {}), 
                  ad_data
                 ]
 
@@ -54,7 +63,7 @@ def parse_offer_page(scraper, url):
 
     # if we failed to get a buildYear at the previous step
     # we add it here
-    if single_ad_df['buildYear'][0] is None:
+    if single_ad_df['buildYear'][0] is None and "bti" in offer_json['offerData']:
         single_ad_df['buildYear'] = offer_json['offerData']['bti']['houseData']['yearRelease']
 
     # constructing address string from multiple keys in the ad_data['geo']['address']
@@ -76,7 +85,11 @@ def parse_offer_page(scraper, url):
         result = [x['value'] 
                   for x 
                   in input_json
-                  if x['label'] == needed_label
+                  if (1==1
+                       and 'label' in x 
+                       and 'value' in x 
+                       and x['label'] == needed_label
+                    )
                  ]
         return result
 
@@ -88,7 +101,7 @@ def parse_offer_page(scraper, url):
     single_ad_df['wc_type'] = none_if_empty(wc_type)
 
     # the same idea as with the wc, but for the elevator
-    elevator_type = search_for_label(offer_json['offerData']['features'][1]['features'] , 'Санузел')
+    elevator_type = search_for_label(offer_json['offerData']['features'][0]['features'] , 'Количество лифтов')
     single_ad_df['elevator_descr'] = none_if_empty(elevator_type)
 
     # sale terms (свободная, альтернативная продажа)
@@ -118,18 +131,33 @@ def parse_offer_page(scraper, url):
     single_ad_df['seo_main_title'] = seo_data['mainTitle']
     single_ad_df['seo_descr'] = seo_data['description']
     
+    is_closed = ad_data['description'] == "Объявление снято с публикации, поищите ещё что-нибудь"
+    single_ad_df['ad_is_closed'] = is_closed
+
     #######################################################################################################
     # loading photos
-    os.mkdir(path + 'photos')
-    photos_urls_list = [x['fullUrl'] 
-                        for x 
-                        in ad_data['photos']
-                       ]
+    forced_mkdir(f"{path}\\photos")
+    if not(is_closed) and ad_data['photos'] is not None:
+        photos_urls = {x['fullUrl'] 
+                      for x 
+                      in ad_data['photos']
+                     }
 
-    scraper = cloudscraper.create_scraper()
-    for photo_url in photos_urls_list:
-        with open(path + f"photos\\{photo_url}.jpg", "wb") as file:
-            current_image = scraper.get(photo_url)
-            file.write(current_image.content)
+        photos_urls = photos_urls | search_photos_url
+    else:
+        photos_urls = search_photos_url
+    
+    random_sleep(mean=mean_sleep, var=var_sleep)
+    
+    def sanitize_filename(url):
+        return re.sub(r'[<>:"/\\|?*]', '_', url)
+
+    if len(photos_urls) > 0:
+        for photo_url in photos_urls:
+            with open(f"{path}\\photos\\{sanitize_filename(photo_url)}", "wb") as file:
+                current_image = scraper.get(photo_url)
+                file.write(current_image.content)
+        
+            random_sleep(mean=mean_sleep, var=var_sleep)
 
     return single_ad_df

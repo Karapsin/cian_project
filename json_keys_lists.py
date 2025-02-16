@@ -41,7 +41,7 @@ search_keys3 = ['parking', 'type', 'passengerLiftsCount',
 # offer['bargainTerms']
 search_keys4 = ['mortgageAllowed', 'saleType', 'priceType', 'vatType',
                 'price', 'utilitiesTerms', 'agentBonus', 'deposit',
-                'agentFee', 'bargainAllowed'
+                'agentFee', 'bargainAllowed', 'currency'
                ]
 
 search_keys_meta_list = [search_keys1, search_keys2, search_keys3, search_keys4]

@@ -1,8 +1,9 @@
 import pandas as pd
-from json_keys_lists import search_keys_meta_list
+from json_keys_lists import search_keys_meta_list, search_offer_cols_map
 from math import ceil
 from utils import (
     time_print,
+    forced_mkdir,
     random_sleep,
     load_offer_json,
     add_json_values
@@ -21,7 +22,7 @@ def process_single_offer_card(offer):
                 ]
 
     for json, keys_list in zip(json_list, search_keys_meta_list):
-        single_ad_df = add_json_values(single_ad_df, json, keys_list)
+        single_ad_df = add_json_values(single_ad_df, json, keys_list, col_names_map = search_offer_cols_map)
 
     single_ad_df['cian_price_range'] = offer['goodPrice']['estimationRange'] if 'goodPrice' in offer.keys() else None
     single_ad_df['photo_url_list'] = str([x['fullUrl'] for x in offer['photos']])
@@ -29,8 +30,11 @@ def process_single_offer_card(offer):
     return single_ad_df
 
 
-def parse_all_search_results(scraper, url, sleep_mean = 30, sleep_var = 5):
-    offers_json = load_offer_json(scraper, url, 'search_page')['results']
+def parse_all_search_results(scraper, url, search_alias, save_to = None, sleep_mean = 30, sleep_var = 5):
+    path = f"{save_to}\\{search_alias}_page1"
+    forced_mkdir(path)
+
+    offers_json = load_offer_json(scraper, url, 'search_page', path)['results']
     max_page = ceil(offers_json['aggregatedOffers']/28)
 
     print(f"starting search page parsing, {max_page} pages in total")
@@ -41,10 +45,17 @@ def parse_all_search_results(scraper, url, sleep_mean = 30, sleep_var = 5):
 
         # after 1st page is done we need to load a new one
         if i > 0:
-            offers_json = load_offer_json(scraper, f"{url}&p={i+1}", 'search_page')['results']
+            path = f"{save_to}\\{search_alias}_page{i+1}"
+            forced_mkdir(path)
 
-        offers_list = offers_json['offers']
-        current_page_df = pd.concat([process_single_offer_card(offer) for offer in offers_list], ignore_index=True)
+            offers_json = load_offer_json(scraper, f"{url}&p={i+1}", 'search_page', f"{save_to}\\{search_alias}_page{i+1}")['results']
+
+
+        current_page_df = pd.concat([process_single_offer_card(offer) 
+                                     for offer in offers_json['offers']
+                                    ], 
+                                    ignore_index=True
+                          )
         page_df_list.append(current_page_df)
         time_print("finished")
 
