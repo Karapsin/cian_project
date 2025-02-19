@@ -28,7 +28,7 @@ def try_parse_offer_page(scraper, url, photos_url, mean_sleep = 3, try_cnt = 0):
 
         if (is_con_error or is_key_agent_error) and try_cnt < 1:
             time_print("retrying after some sleep")
-            random_sleep(-100, 5)
+            random_sleep(mean_sleep, 5)
             return try_parse_offer_page(scraper, url, photos_url, mean_sleep = mean_sleep, try_cnt = try_cnt + 1)
 
         raise
